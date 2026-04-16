@@ -11,6 +11,10 @@
 <style>
     body {
         background-color: #F8F9FA;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        
     }
 </style>
 

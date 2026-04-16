@@ -1,17 +1,25 @@
-<footer class="fixed-bottom ms-4 me-4 mb-5">
-  <div class="container-fluid position-relative py-2">
-    <!-- Left -->
-    <span class="position-absolute start-0 fw-semibold" style="color: #1D3A8A;">Academic Portal</span>
+<footer class="border-top bg-white py-3 mt-auto">
+  <div class="container-fluid px-3 px-md-4">
+    <div class="row gy-2 align-items-center text-center text-md-start">
+      
+      <!-- Left -->
+      <div class="col-12 col-md-4">
+        <span class="fw-semibold" style="color: #1D3A8A;">Academic Portal</span>
+      </div>
 
-    <!-- Center -->
-    <span class="position-absolute start-50 translate-middle-x">
-      © 2026 example University
-    </span>
+      <!-- Center -->
+      <div class="col-12 col-md-4 text-center">
+        <span class="text-secondary">© 2026 example University</span>
+      </div>
 
-    <!-- Right group -->
-    <div class="position-absolute end-0 d-flex gap-3">
-      <span>Privacy Policy</span>
-      <span>Terms of Service</span>
+      <!-- Right -->
+      <div class="col-12 col-md-4">
+        <div class="d-flex flex-column flex-md-row justify-content-center justify-content-md-end gap-1 gap-md-3">
+          <span class="text-secondary">Privacy Policy</span>
+          <span class="text-secondary">Terms of Service</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </footer>
