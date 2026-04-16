@@ -19,13 +19,13 @@
     <?php include 'login page/navbar.php'; ?>
 
 <!-- login card -->
-    <main class="container-fluid">
-        <div class="row justify-content-center align-items-center py-5">
+    <main class="container-fluid d-flex align-items-center" style="min-height: calc(100vh - 140px);">
+    <div class="row justify-content-center align-items-center w-100">
 
-            <!-- Centered Card -->
-            <div class="col-12 col-lg-10 col-xl-9">
-                <div class="card border-0 shadow rounded-4 overflow-hidden">
-                    <div class="row g-0">
+        <!-- centered card -->
+        <div class="col-12 col-lg-10 col-xl-9">
+            <div class="card border-0 shadow rounded-4 overflow-hidden">
+                <div class="row g-0">
 
                         <!-- LEFT PART, text and flat bg -->
                         <div class="col-md-6 d-none d-md-flex text-white p-5 flex-column justify-content-end" style="min-height: 620px; background-color: #002349;">

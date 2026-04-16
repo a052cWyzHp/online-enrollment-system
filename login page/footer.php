@@ -1,4 +1,4 @@
-<footer class="bottom ms-4 me-4 mb-5">
+<footer class="fixed-bottom ms-4 me-4 mb-5">
   <div class="container-fluid position-relative py-2">
     <!-- Left -->
     <span class="position-absolute start-0 fw-semibold" style="color: #1D3A8A;">Academic Portal</span>
