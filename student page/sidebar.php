@@ -44,12 +44,13 @@
                 <i class="bi bi-person-fill me-3"></i>Profile
             </a>
 
-            <a href="#"
+            <a href="student_enrollment.php"
                 class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'enrollment' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-briefcase-fill me-3"></i>Enrollment
             </a>
 
-            <a href="#"
+            <!-- defunct for now since these will be located inside the enrollment page itself -->
+            <!-- <a href="#"
                 class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'documents' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-cloud-arrow-up-fill me-3"></i>Documents
             </a>
@@ -57,13 +58,13 @@
             <a href="#"
                 class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'status' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-check2-square me-3"></i>Status
-            </a>
+            </a> -->
 
             <div class="my-4"></div>
-            <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentStudentPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
+            <!-- <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentStudentPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-gear-fill me-3"></i>Settings
-            </a>
-            <a href="#" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
+            </a> -->
+            <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
             </a>
         </div>
@@ -100,7 +101,7 @@
                 <i class="bi bi-briefcase-fill me-3"></i>Enrollment
             </a>
 
-            <a href="#"
+            <!-- <a href="#"
                 class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'documents' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-cloud-arrow-up-fill me-3"></i>Documents
             </a>
@@ -112,9 +113,9 @@
 
             <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentStudentPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-gear-fill me-3"></i>Settings
-            </a>
+            </a> -->
 
-            <a href="#" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
+            <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
             </a>
         </div>

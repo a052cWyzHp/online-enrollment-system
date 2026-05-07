@@ -56,7 +56,7 @@
             <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentAdminPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-gear-fill me-3"></i>Settings
             </a>
-            <a href="#" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
+            <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
             </a>
         </div>
@@ -100,7 +100,7 @@
                 <i class="bi bi-gear-fill me-3"></i>Settings
             </a>
 
-            <a href="#" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
+            <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
             </a>
         </div>
