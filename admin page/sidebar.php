@@ -53,9 +53,9 @@
 
             <div class="my-4"></div>
 
-            <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentAdminPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
+            <!-- <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium <?= $currentAdminPage === 'settings' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-gear-fill me-3"></i>Settings
-            </a>
+            </a> -->
             <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
             </a>
@@ -96,9 +96,9 @@
                 <i class="bi bi-clock-history me-3"></i>Activity Logs
             </a>
 
-            <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium menuHover">
+            <!-- <a href="#" class="nav-link rounded-4 px-3 py-3 text-secondary fw-medium menuHover">
                 <i class="bi bi-gear-fill me-3"></i>Settings
-            </a>
+            </a> -->
 
             <a href="logout.php" class="nav-link rounded-4 px-3 py-3 fw-medium logoutHover">
                 <i class="bi bi-box-arrow-left me-3"></i>Logout
