@@ -1,0 +1,4 @@
+# Ignore everything in 'uploads' but keep the folder
+uploads/documents/*
+uploads/payments/*
+/student_dashboard OLD.php
