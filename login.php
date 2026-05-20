@@ -133,13 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
 
-                                <div class="form-check mb-4">
-                                    <input class="form-check-input" type="checkbox" id="staySignedIn">
-                                    <label class="form-check-label text-secondary" for="staySignedIn">
-                                        Stay signed in for 30 days
-                                    </label>
-                                </div>
-
                                 <div class="d-grid mb-4">
                                     <button type="submit" class="btn btn-primary btn-lg fw-semibold rounded-3">
                                         Login
