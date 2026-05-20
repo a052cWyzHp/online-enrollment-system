@@ -11,7 +11,7 @@
 
 <body class="bg-light-subtle d-flex flex-column min-vh-100">
 
-<?php include 'student page/navbar.php'; ?>
+<?php include 'login page/navbar.php'; ?>
 
 <main class="container flex-grow-1 py-5">
     <div class="row justify-content-center">
@@ -81,7 +81,7 @@
     </div>
 </main>
 
-<?php include 'student page/footer.php'; ?>
+<?php include 'login page/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>

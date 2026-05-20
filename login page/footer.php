@@ -9,14 +9,14 @@
 
       <!-- Center -->
       <div class="col-12 col-md-4 text-center">
-        <span class="text-secondary">© 2026 example University</span>
+        <span class="text-secondary">© 2026 Digital University</span>
       </div>
 
       <!-- Right -->
       <div class="col-12 col-md-4">
         <div class="d-flex flex-column flex-md-row justify-content-center justify-content-md-end gap-1 gap-md-3">
-          <span class="text-secondary">Privacy Policy</span>
-          <span class="text-secondary">Terms of Service</span>
+          <a href="privacy_policy.php" class="text-decoration-none text-secondary">Privacy Policy</a>
+          <a href="terms_of_service.php" class="text-decoration-none text-secondary">Terms of Service</a>
         </div>
       </div>
 

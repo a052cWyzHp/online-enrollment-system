@@ -101,6 +101,7 @@
 
             </a>
 
+            <!-- PROGRAMS -->
             <a href="admin_programs.php"
                class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentAdminPage === 'programs' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
 
@@ -170,6 +171,16 @@
                 <i class="bi bi-grid-fill me-3"></i>
 
                 Dashboard
+
+            </a>
+
+            <!-- PROGRAMS -->
+            <a href="admin_programs.php"
+               class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentAdminPage === 'programs' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
+
+                <i class="bi bi-journal-text me-3"></i>
+
+                Programs
 
             </a>
 

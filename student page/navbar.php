@@ -6,7 +6,12 @@
                 <i class="bi bi-list fs-3" style="color: #334155;"></i>
             </button>
 
-            <a class="navbar-brand fw-bold me-3 mb-0" href="#" style="color: #0b1f5f;">Academic Portal</a>
+            <div class="navbar-header">
+                <a href="#" class="navbar-brand" style="color: #172554;">
+                    <i class="bi bi-bank2"></i>
+                    <span>Academic Portal</span>
+                </a>
+            </div>
         </div>
     </div>
 </nav>

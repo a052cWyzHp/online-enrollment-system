@@ -6,9 +6,5 @@
             <span>Academic Portal</span>
         </a>
     </div>
-    <ul class="nav navbar-nav ms-auto me-3" style="color: #6F7E93;">
-        <li class="ms-2">Test</li>
-        <li class="ms-2">Test</li>
-    </ul>
 </div>
 </nav>

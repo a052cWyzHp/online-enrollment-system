@@ -92,10 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 </style>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 <?php include 'login page/navbar.php'; ?>
 
-<main class="container-fluid d-flex align-items-center" style="min-height: calc(100vh - 140px);">
+<main class="container-fluid flex-grow-1 d-flex align-items-center justify-content-center py-4">
     <div class="row justify-content-center align-items-center w-100">
 
         <div class="col-12 col-lg-10 col-xl-9">
@@ -145,7 +145,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <label for="password" class="form-label fw-semibold small text-uppercase mb-1">Password</label>
-                                        <a href="#" class="text-decoration-none small fw-semibold">Forgot password?</a>
                                     </div>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0">
