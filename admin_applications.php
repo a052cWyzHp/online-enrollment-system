@@ -536,7 +536,7 @@ $sortOrder = $_GET['sort_order'] ?? 'desc';
 $programId = $_GET['program_id'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
 $page = max(1, (int) ($_GET['page'] ?? 1));
-$limit = 2;
+$limit = 5; // how many items in table
 $offset = ($page - 1) * $limit;
 
 $programs = $manager->getPrograms();
