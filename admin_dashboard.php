@@ -1,29 +1,26 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}
+} //start session if there isn't any
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
-}
+} // if theres no user_id inside session, meaning not logged in, kick the user back to login page
 
 if (($_SESSION['role'] ?? '') == 'student') {
     header('Location: student_dashboard.php');
     exit;
-}
+} // if the user is a student, send them to student page
 
-$currentAdminPage = 'dashboard';
-
-$basePath = '';
-
+$currentAdminPage = 'dashboard'; // for sidebar
 require_once 'config.php';
 
 if (!isset($pdo) && isset($conn) && $conn instanceof PDO) {
     $pdo = $conn;
-}
+} // if config.php is using $conn, give it to $pdo variable
 
-
+// this class is just for managing metrics
 class AdminDashboard {
 
     private PDO $conn;
@@ -32,7 +29,7 @@ class AdminDashboard {
         $this->conn = $pdo;
     }
 
-    public function getStats(): array {
+    public function getStats(): array { // used for dashboard stats on top of the page
 
         $stats = [
             'total_students' => 0,
@@ -48,15 +45,13 @@ class AdminDashboard {
                 SUM(CASE WHEN application_status IN ('payment_pending', 'payment_submitted', 'enrolled', 'fully_enrolled') AND MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END) AS approved_this_month,
                 SUM(CASE WHEN application_status = 'rejected' THEN 1 ELSE 0 END) AS rejected_applications
             FROM enrollment_applications
-        ";
+        "; // query that counts based on condition
 
         $stmt = $this->conn->prepare($query);
-
         $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC); // turns the query result into an associative array
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if($row) {
+        if($row) { // if the SQL query is successful, put the correspondingvalues into $stats associative array
             $stats['total_students'] = (int) $row['total_students'];
             $stats['pending_applications'] = (int) $row['pending_applications'];
             $stats['approved_this_month'] = (int) $row['approved_this_month'];
@@ -66,7 +61,7 @@ class AdminDashboard {
         return $stats;
     }
 
-    public function getRecentApplications(): PDOStatement {
+    public function getRecentApplications(): PDOStatement { //used for recent aplications table
 
         $query = "
             SELECT
@@ -93,7 +88,7 @@ class AdminDashboard {
         return $stmt;
     }
 
-    public function getRecentActivities(): PDOStatement {
+    public function getRecentActivities(): PDOStatement { // used for recent logs
 
         $query = "
             SELECT
@@ -115,9 +110,10 @@ class AdminDashboard {
     }
 }
 
+// for status labels with their own classes
 function getStatusBadge(string $status): string {
 
-    $label = ucwords(str_replace('_', ' ', $status));
+    $label = ucwords(str_replace('_', ' ', $status)); //replace underscore with space, e.g. documment_submitted -> document submitted
 
     if(in_array($status, ['enrolled', 'fully_enrolled', 'payment_pending'])) {
         return '<span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">' . htmlspecialchars($label) . '</span>';
@@ -134,7 +130,7 @@ function getStatusBadge(string $status): string {
     return '<span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">' . htmlspecialchars($label) . '</span>';
 }
 
-$dashboard = new AdminDashboard($pdo);
+$dashboard = new AdminDashboard($pdo); //instancing
 
 $stats = $dashboard->getStats();
 
@@ -158,12 +154,12 @@ $recentActivities = $dashboard->getRecentActivities();
 </head>
 <body class="bg-light-subtle">
 
-<?php include $basePath . 'admin page/navbar.php'; ?>
+<?php include 'admin page/navbar.php'; ?>
 
 <div class="container-fluid">
     <div class="row g-0">
 
-        <?php include $basePath . 'admin page/sidebar.php'; ?>
+        <?php include 'admin page/sidebar.php'; ?>
 
         <main class="col-12 col-lg-10 col-xl-10 ms-auto px-3 px-md-4 px-lg-4 py-4" style="min-height: calc(100vh - 140px);">
 
@@ -177,6 +173,7 @@ $recentActivities = $dashboard->getRecentActivities();
                 </div>
 
                 <div class="row g-3 mb-4">
+                    <!-- total active students card -->
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="card border-0 rounded-4 shadow-sm h-100">
                             <div class="card-body p-4">
@@ -192,6 +189,7 @@ $recentActivities = $dashboard->getRecentActivities();
                         </div>
                     </div>
 
+                    <!-- pending applications card -->
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="card border-0 rounded-4 shadow-sm h-100">
                             <div class="card-body p-4">
@@ -207,6 +205,7 @@ $recentActivities = $dashboard->getRecentActivities();
                         </div>
                     </div>
 
+                    <!-- approved this month card -->
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="card border-0 rounded-4 shadow-sm h-100">
                             <div class="card-body p-4">
@@ -222,6 +221,7 @@ $recentActivities = $dashboard->getRecentActivities();
                         </div>
                     </div>
 
+                    <!-- rejected applications card -->
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="card border-0 rounded-4 shadow-sm h-100">
                             <div class="card-body p-4">
@@ -239,6 +239,8 @@ $recentActivities = $dashboard->getRecentActivities();
                 </div>
 
                 <div class="row g-4">
+
+                    <!-- recent applications table -->
                     <div class="col-12 col-xl-8">
                         <div class="card border-0 rounded-4 shadow-sm h-100">
                             <div class="card-body p-4">
@@ -307,6 +309,7 @@ $recentActivities = $dashboard->getRecentActivities();
                         </div>
                     </div>
 
+                    <!-- recent activity table -->
                     <div class="col-12 col-xl-4">
                         <div class="card border-0 rounded-4 shadow-sm mb-4">
                             <div class="card-body p-4">
@@ -348,7 +351,7 @@ $recentActivities = $dashboard->getRecentActivities();
     </div>
 </div>
 
-<?php include $basePath . 'admin page/footer.php'; ?>
+<?php include 'admin page/footer.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -20,7 +20,7 @@ require_once 'config.php';
 require_once 'utilities/UIFormatter.php'; // this is for format helper and colors based on enrollment status
 
 if (!isset($pdo) && isset($conn) && $conn instanceof PDO) {
-    $pdo = $conn;
+    $pdo = $conn; // if not
 }
 
 
@@ -31,7 +31,7 @@ class ApplicationManager {
         $this->conn = $pdo;
     }
 
-    public function getPrograms(): array {
+    public function getPrograms(): array { // just grabs programs or courses for the dropdown filter
         $query = "
             SELECT
                 program_id,
@@ -48,7 +48,7 @@ class ApplicationManager {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getApplicationStatuses(): array {
+    public function getApplicationStatuses(): array { // this is for the filtering dropdown
         return [
             'application_form_pending',
             'documents_pending',
@@ -66,6 +66,7 @@ class ApplicationManager {
     }
 
     private function buildWhere(string $search, string $programId, string $status, array &$params): string {
+        // this is for filtering and searching, combines search bar and dropdown inputs
         $where = [
             'u.full_name LIKE :search'
         ];
@@ -88,6 +89,7 @@ class ApplicationManager {
     }
 
     public function countApplications(string $search, string $programId, string $status): int {
+        // this is to count how many results are there from the filters, which is important for finding out how many table items to display
         $params = [];
         $whereSql = $this->buildWhere($search, $programId, $status, $params);
 
@@ -107,6 +109,7 @@ class ApplicationManager {
     }
 
     public function getAllApplications(string $search, string $sortBy, string $sortOrder, string $programId, string $status, int $limit, int $offset): array {
+        // this gets the actual data of each applicant
         $allowedSort = [
             'application_id' => 'ea.application_id',
             'name' => 'u.full_name',
@@ -177,6 +180,7 @@ class ApplicationManager {
     }
 
     public function getDocumentsByApplication(int $applicationId): array {
+        // gets all the submitted documents of the applicant
         $query = "
             SELECT
                 ud.document_id,
@@ -200,6 +204,7 @@ class ApplicationManager {
     }
 
     public function getPaymentByApplication(int $applicationId): ?array {
+        // same as the previous function but for payment documents
         $query = "
             SELECT
                 payment_id,
@@ -225,6 +230,7 @@ class ApplicationManager {
     }
 
     public function updateStatus(int $applicationId, string $action, int $adminUserId): string {
+        // this handles the administrator's action for the applicant, whether to approve reject etc
         $this->conn->beginTransaction();
 
         try {
@@ -248,19 +254,21 @@ class ApplicationManager {
             ]);
 
             $application = $stmt->fetch(PDO::FETCH_ASSOC);
+            // basically finds the exact record of the applicant the administrator is viewing in the details modal
 
             if(!$application) {
                 throw new Exception('Application was not found.');
-            }
+            } // throw this error if the record of the applicant cant be found
 
             $oldStatus = $application['application_status'];
-            $newStatus = $this->getAllowedNextStatus($oldStatus, $action);
+            $newStatus = $this->getAllowedNextStatus($oldStatus, $action); // gets the next step of application status
 
             if(!$newStatus) {
                 throw new Exception('This action is not available for the current application status.');
             }
 
             if($newStatus === 'fully_enrolled') {
+                // if the next step for the applicant is to be fully enrolled, check first if there are slots in the program, throw error if none left, if available, verify the payment status of the applicant
                 $slot = $this->conn->prepare("
                     UPDATE programs
                     SET slots_available = slots_available - 1
@@ -291,6 +299,7 @@ class ApplicationManager {
             }
 
             if($action === 'request_payment_reupload') {
+                // if the admin requested the applicant to reupload payment, reflect it onto the database
                 $paymentUpdate = $this->conn->prepare("
                     UPDATE payments
                     SET payment_status = 'rejected',
@@ -314,7 +323,7 @@ class ApplicationManager {
             $update->execute([
                 ':new_status' => $newStatus,
                 ':application_id' => $applicationId
-            ]);
+            ]); // update the application status of the applicant to the $newstatus
 
             $reviewDecision = $this->getReviewDecision($action, $newStatus);
 
@@ -337,7 +346,7 @@ class ApplicationManager {
                 ':admin_user_id' => $adminUserId,
                 ':remarks' => 'Admin updated the application from ' . $oldStatus . ' to ' . $newStatus . '.',
                 ':decision' => $reviewDecision
-            ]);
+            ]); // deliver review decision by the admin
 
             $history = $this->conn->prepare("
                 INSERT INTO status_history (
@@ -361,7 +370,7 @@ class ApplicationManager {
                 ':new_status' => $newStatus,
                 ':changed_by' => $adminUserId,
                 ':change_notes' => $this->getActionNote($action)
-            ]);
+            ]); // for status logging
 
             $log = $this->conn->prepare("
                 INSERT INTO admin_logs (
@@ -387,7 +396,7 @@ class ApplicationManager {
                 ':target_id' => $applicationId,
                 ':description' => 'Updated application of ' . $application['full_name'] . ' from ' . $oldStatus . ' to ' . $newStatus . '.',
                 ':ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
-            ]);
+            ]); // for admin logs
 
             $this->conn->commit();
 
@@ -395,15 +404,17 @@ class ApplicationManager {
 
         } catch(Exception $e) {
             if($this->conn->inTransaction()) {
-                $this->conn->rollBack();
+                $this->conn->rollBack(); // cancel all of the previous queries if the query fails
             }
 
-            return $e->getMessage();
+            return $e->getMessage(); // return error message
         }
     }
 
     private function getAllowedNextStatus(string $oldStatus, string $action): ?string {
+        // private utility class to get the next application status based on reviews
         if(in_array($oldStatus, ['documents_submitted', 'under_review'])) {
+            // if the $oldstatus has the following statuses, return these statuses based on the admin's review decision
             if($action === 'approve_documents') {
                 return 'payment_pending';
             }
@@ -420,17 +431,18 @@ class ApplicationManager {
         if($oldStatus === 'payment_submitted') {
             if($action === 'approve_payment') {
                 return 'fully_enrolled';
-            }
+            } // if payment is approved, enroll the applicant into the program
 
             if($action === 'request_payment_reupload') {
                 return 'payment_pending';
-            }
+            } // if payment is denied and requested for reupload, put the applicant's status back to payment_pending so they may be able to upload again
         }
 
         return null;
     }
 
     private function getReviewDecision(string $action, string $newStatus): string {
+        // returns review decision by the admin
         if($action === 'reject_application') {
             return 'rejected';
         }
@@ -447,6 +459,7 @@ class ApplicationManager {
     }
 
     private function getActionNote(string $action): string {
+        // description for every admin decision, which is used for logging
         return match($action) {
             'approve_documents' => 'Admin accepted submitted documents and moved application to payment step.',
             'reject_application' => 'Admin rejected the application.',
@@ -459,6 +472,7 @@ class ApplicationManager {
 }
 
 function getApplicationActions(string $status): array {
+    // this is for the buttons inside detail modal
     if(in_array($status, ['documents_submitted', 'under_review'])) {
         return [
             [
@@ -512,7 +526,7 @@ function pageLink(int $pageNumber): string {
     $query['page'] = $pageNumber;
 
     return '?' . http_build_query($query);
-}
+} // this is for pagination on the url, e.g. admin_applications.php?page=1
 
 $manager = new ApplicationManager($pdo);
 
@@ -520,6 +534,7 @@ $message = $_SESSION['admin_application_message'] ?? '';
 unset($_SESSION['admin_application_message']);
 
 if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_action'], $_POST['application_id'])) {
+    // if admin presses confirm on the confirmation modal, update the status of the applicant
     $applicationId = (int) $_POST['application_id'];
     $action = $_POST['application_action'];
     $adminUserId = (int) $_SESSION['user_id'];
@@ -603,6 +618,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                 </a>
             </div>
 
+            <!-- status message -->
             <?php if($message !== ''): ?>
                 <div class="alert alert-info border-0 rounded-4 shadow-sm">
                     <?= htmlspecialchars($message); ?>
@@ -613,11 +629,13 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
                     <form method="get" class="row g-3 align-items-end">
+                        <!-- search name -->
                         <div class="col-12 col-lg-3">
                             <label class="form-label small fw-bold text-uppercase">Search Applicant Name</label>
                             <input type="text" name="search" value="<?= htmlspecialchars($search); ?>" class="form-control rounded-3" placeholder="Search by name">
                         </div>
 
+                        <!-- sort by -->
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label class="form-label small fw-bold text-uppercase">Sort By</label>
                             <select name="sort_by" class="form-select rounded-3">
@@ -629,6 +647,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </select>
                         </div>
 
+                        <!-- order by -->
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label class="form-label small fw-bold text-uppercase">Order</label>
                             <select name="sort_order" class="form-select rounded-3">
@@ -637,6 +656,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </select>
                         </div>
 
+                        <!-- program dropdown -->
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label class="form-label small fw-bold text-uppercase">Program</label>
                             <select name="program_id" class="form-select rounded-3">
@@ -649,6 +669,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </select>
                         </div>
 
+                        <!-- application status dropdown -->
                         <div class="col-12 col-sm-6 col-lg-2">
                             <label class="form-label small fw-bold text-uppercase">Application Status</label>
                             <select name="status" class="form-select rounded-3">
@@ -661,6 +682,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </select>
                         </div>
 
+                        <!-- filter button -->
                         <div class="col-12 col-lg-1 d-grid">
                             <button type="submit" class="btn btn-primary rounded-3">
                                 Filter
@@ -670,7 +692,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                 </div>
             </div>
 
-            <!-- CARD -->
+            <!-- APPLICATION TABLE -->
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <div class="d-flex flex-column flex-lg-row
@@ -865,6 +887,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
     <div class="modal fade" id="applicationModal<?= htmlspecialchars($row['application_id']); ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content border-0 rounded-4">
+
                 <div class="modal-header border-0 p-4">
                     <div>
                         <h5 class="modal-title fw-bold" style="color:#0f172a;">
@@ -877,8 +900,10 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
+                <!-- what was written in application form -->
                 <div class="modal-body p-4 pt-0">
                     <div class="row g-4">
+                        <!-- personal info -->
                         <div class="col-12 col-lg-6">
                             <div class="border rounded-4 p-4 h-100">
                                 <h6 class="fw-bold text-uppercase mb-3">Personal Information</h6>
@@ -891,6 +916,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </div>
                         </div>
 
+                        <!-- address info -->
                         <div class="col-12 col-lg-6">
                             <div class="border rounded-4 p-4 h-100">
                                 <h6 class="fw-bold text-uppercase mb-3">Address Information</h6>
@@ -901,6 +927,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </div>
                         </div>
 
+                        <!-- academic background -->
                         <div class="col-12 col-lg-6">
                             <div class="border rounded-4 p-4 h-100">
                                 <h6 class="fw-bold text-uppercase mb-3">Academic Background</h6>
@@ -912,6 +939,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             </div>
                         </div>
 
+                        <!-- program and guardian -->
                         <div class="col-12 col-lg-6">
                             <div class="border rounded-4 p-4 h-100">
                                 <h6 class="fw-bold text-uppercase mb-3">Program and Guardian</h6>
@@ -923,6 +951,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                         </div>
                     </div>
 
+                    <!-- uploaded documents table -->
                     <div class="mt-4">
                         <h6 class="fw-bold text-uppercase mb-3">Uploaded Documents</h6>
 
@@ -962,6 +991,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                         </div>
                     </div>
 
+                    <!-- proof of payment -->
                     <div class="mt-4">
                         <h6 class="fw-bold text-uppercase mb-3">Payment Proof</h6>
 
@@ -984,6 +1014,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                         <?php endif; ?>
                     </div>
 
+                    <!-- admin actions -->
                     <div class="mt-4">
                         <h6 class="fw-bold text-uppercase mb-3">Admin Actions</h6>
 
@@ -1014,6 +1045,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
         </div>
     </div>
 
+    <!-- confirmation modal after admin presses an action button -->
     <?php foreach($actions as $action): ?>
         <div class="modal fade" id="confirm<?= htmlspecialchars($row['application_id'] . $action['action']); ?>" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
