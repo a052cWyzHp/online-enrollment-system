@@ -2,6 +2,38 @@
 session_start();
 require_once 'config.php';
 
+// authentication manager class
+class AuthManager {
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function loginUser(string $email, string $password): array {
+        $statement = $this->pdo->prepare("
+            SELECT user_id, full_name, email, password_hash, role, status
+            FROM users
+            WHERE email = :email
+            LIMIT 1
+        ");
+        $statement->execute([':email' => $email]);
+        $user = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) { // show this error if the sql query wasn't able to find a match, meaning it was mistyped because the inputted login does not exist
+            throw new Exception('Invalid email or password.');
+        }
+        if ($user['status'] !== 'active') { // show this error if the user's status is inactive
+            throw new Exception('This account is inactive. Please contact the administrator.');
+        }
+        if (!password_verify($password, $user['password_hash'])) { // show this error after it hashes the inputted password and it did not match with the hashed password in the database
+            throw new Exception('Invalid email or password.');
+        }
+
+        return $user; // if it did not trigger the 3 previous if statements, return all login details to $user which will be used for authentication, meaning a success
+    }
+}
+
 $errorMessage = '';
 $successMessage = '';
 
@@ -13,46 +45,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($email === '' || $password === '') {
+    if ($email === '' || $password === '') { // show this error if theres nothing written in email or password
         $errorMessage = 'Please enter your email and password.';
     } else {
-        try {
-            $statement = $pdo->prepare("
-                SELECT user_id, full_name, email, password_hash, role, status
-                FROM users
-                WHERE email = :email
-                LIMIT 1
-            ");
+        try { //authenticate the user using the AuthManager class
+            $auth = new AuthManager($pdo);
+            $user = $auth->loginUser($email, $password); // this will decide if the login is correct, if failed the following code won't work
 
-            $statement->execute([':email' => $email]);
-            $user = $statement->fetch();
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
 
-            if (!$user) {
-                $errorMessage = 'Invalid email or password.';
-            } elseif ($user['status'] !== 'active') {
-                $errorMessage = 'This account is inactive. Please contact the administrator.';
-            } elseif (!password_verify($password, $user['password_hash'])) {
-                $errorMessage = 'Invalid email or password.';
-            } else {
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role'];
-
-                if ($user['role'] === 'admin') {
-                    header('Location: admin_dashboard.php');
-                    exit;
-                }
-
-                header('Location: student_dashboard.php');
+            if ($user['role'] === 'admin') { // if the account's role is admin, send to admin dashboard
+                header('Location: admin_dashboard.php');
                 exit;
             }
-        } catch (PDOException $e) {
-            $errorMessage = 'Login failed. Please try again.';
+
+            header('Location: student_dashboard.php'); // if not, send to student dashboard instead
+            exit;
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -99,12 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 Please enter your credentials to continue.
                             </p>
 
+                            <!-- this shows the success message after registering -->
                             <?php if (!empty($successMessage)): ?>
                                 <div class="alert alert-success rounded-3">
                                     <?= htmlspecialchars($successMessage); ?>
                                 </div>
                             <?php endif; ?>
 
+                            <!-- this shows the error message if there is any -->
                             <?php if (!empty($errorMessage)): ?>
                                 <div class="alert alert-danger rounded-3">
                                     <?= htmlspecialchars($errorMessage); ?>

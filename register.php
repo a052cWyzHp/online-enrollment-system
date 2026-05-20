@@ -2,6 +2,57 @@
 session_start();
 require_once 'config.php';
 
+// registration manager class
+class RegistrationManager {
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function registerStudent(string $fullName, string $email, string $password): void { // we are using the word "student" because registered users will have student roles by default unless changed by an admin in the database
+        $checkEmail = $this->pdo->prepare("SELECT user_id FROM users WHERE email = :email LIMIT 1");
+        $checkEmail->execute([':email' => $email]); // this checks if there is already an existing user by checking the email
+
+        if ($checkEmail->fetch()) { // show this error when there is already a user with the registered email
+            throw new Exception('This email is already registered.');
+        }
+
+        try {
+            $this->pdo->beginTransaction(); // prepares the following SQL queries into something called "transaction" before sending (committing) it to the database
+
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+            $insertUser = $this->pdo->prepare("
+                INSERT INTO users (full_name, email, password_hash, role, status)
+                VALUES (:full_name, :email, :password_hash, 'student', 'active')
+            "); // insert the following record into the database, specifically the users table
+
+            $insertUser->execute([
+                ':full_name' => $fullName,
+                ':email' => $email,
+                ':password_hash' => $passwordHash
+            ]);
+
+            $userId = $this->pdo->lastInsertId(); // gets the user id of the newly made user and puts it into $userId variable
+
+            $insertProfile = $this->pdo->prepare("
+                INSERT INTO student_profiles (user_id)
+                VALUES (:user_id)
+            "); // then use the userid to make a new record in student_profiles table
+
+            $insertProfile->execute([':user_id' => $userId]);
+
+            $this->pdo->commit(); // execute the SQL queries
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) { // if something went wrong with the commit and the transaction still exists, remove the sql queries so it wont be executed to the database
+                $this->pdo->rollBack();
+            }
+            throw new Exception('Registration failed. Please try again.');
+        }
+    }
+}
+
 $errorMessage = '';
 $successMessage = '';
 
@@ -11,56 +62,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
 
-    if ($fullName === '' || $email === '' || $password === '' || $confirmPassword === '') {
+    if ($fullName === '' || $email === '' || $password === '' || $confirmPassword === '') { // show this error if there is a missing field
         $errorMessage = 'Please complete all required fields.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // show this error if the inputted email does not match the template: "email@email.com"
         $errorMessage = 'Please enter a valid email address.';
-    } elseif ($password !== $confirmPassword) {
+    } elseif ($password !== $confirmPassword) { // show this error if the password and confirm password do not match
         $errorMessage = 'Passwords do not match.';
-    } elseif (strlen($password) < 8) {
+    } elseif (strlen($password) < 8) { // show this error if the password is less than 8 characters
         $errorMessage = 'Password must be at least 8 characters long.';
     } else {
-        try {
-            $checkEmail = $pdo->prepare("SELECT user_id FROM users WHERE email = :email LIMIT 1");
-            $checkEmail->execute([':email' => $email]);
+        try { // if the previous if statements weren't triggered, execute the following...
+            $registration = new RegistrationManager($pdo);
+            $registration->registerStudent($fullName, $email, $password); //punch in the inputted name, email, and password into registration manager
 
-            if ($checkEmail->fetch()) {
-                $errorMessage = 'This email is already registered.';
-            } else {
-                $pdo->beginTransaction();
-
-                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-
-                $insertUser = $pdo->prepare("
-                    INSERT INTO users (full_name, email, password_hash, role, status)
-                    VALUES (:full_name, :email, :password_hash, 'student', 'active')
-                ");
-
-                $insertUser->execute([
-                    ':full_name' => $fullName,
-                    ':email' => $email,
-                    ':password_hash' => $passwordHash
-                ]);
-
-                $userId = $pdo->lastInsertId();
-
-                $insertProfile = $pdo->prepare("
-                    INSERT INTO student_profiles (user_id)
-                    VALUES (:user_id)
-                ");
-
-                $insertProfile->execute([':user_id' => $userId]);
-
-                $pdo->commit();
-
-                header('Location: login.php?registered=1');
-                exit;
-            }
-        } catch (PDOException $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            $errorMessage = 'Registration failed. Please try again.';
+            header('Location: login.php?registered=1'); // send user to login page with a successful registration message
+            exit;
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
         }
     }
 }
@@ -110,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <h2 class="fw-bold mb-3" style="color: #0f2257; font-size: 3rem;">Create Account</h2>
                             <p class="text-secondary mb-4 fs-4">Please enter your details to register.</p>
 
+                            <!-- this shows the error message -->
                             <?php if (!empty($errorMessage)): ?>
                                 <div class="alert alert-danger rounded-3">
                                     <?= htmlspecialchars($errorMessage); ?>
@@ -117,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endif; ?>
 
                             <form method="post">
+                                <!-- full name text field -->
                                 <div class="mb-4">
                                     <label for="full_name" class="form-label fw-semibold small text-uppercase" style="letter-spacing: 2px;">
                                         Full Name
@@ -128,17 +148,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         style="background-color: #F3F4F6; height: 70px;" required>
                                 </div>
 
+                                <!-- email text field -->
                                 <div class="mb-4">
                                     <label for="email" class="form-label fw-semibold small text-uppercase" style="letter-spacing: 2px;">
                                         Email Address
                                     </label>
                                     <input type="email" name="email" class="form-control form-control-lg border-0 rounded-3"
                                         id="email"
-                                        placeholder="student@university.edu"
+                                        placeholder="email@example.com"
                                         value="<?= htmlspecialchars($_POST['email'] ?? ''); ?>"
                                         style="background-color: #F3F4F6; height: 70px;" required>
                                 </div>
 
+                                <!-- password text field -->
                                 <div class="input-group input-group-lg mb-4">
                                     <input type="password" name="password" class="form-control border-0 rounded-start-3"
                                         id="password"
@@ -152,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </button>
                                 </div>
 
+                                <!-- confirm password text field -->
                                 <div class="input-group input-group-lg mb-4">
                                     <input type="password" name="confirm_password" class="form-control border-0 rounded-start-3"
                                         id="confirm_password"
@@ -165,10 +188,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </button>
                                 </div>
 
+                                <!-- register button -->
                                 <div class="d-grid mt-4 mb-5">
                                     <button type="submit" class="btn btn-lg fw-semibold rounded-3 text-white" style="background-color: #002d72; height: 72px;">Register<i class="bi bi-arrow-right ms-2"></i></button>
                                 </div>
 
+                                <!-- divider -->
                                 <div class="d-flex align-items-center mb-4">
                                     <div class="flex-grow-1 border-top"></div>
                                         <span class="px-3 text-uppercase small fw-semibold text-secondary opacity-75" style="letter-spacing: 2px;">
@@ -177,6 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="flex-grow-1 border-top"></div>
                                 </div>
 
+                                <!-- back to login button -->
                                 <div class="text-center mb-5">
                                     <a href="login.php" class="text-decoration-none fw-semibold fs-5" style="color: #111827;">
                                         <i class="bi bi-box-arrow-in-right me-2"></i>Back to Login
@@ -185,6 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <hr class="my-4">
 
+                                <!-- small notice -->
                                 <div class="d-flex align-items-start text-secondary small mt-4">
                                     <i class="bi bi-info-circle-fill me-3 mt-1"></i>
                                     <p class="mb-0" style="font-size: 1rem;">
@@ -205,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php include 'login page/footer.php'; ?>
 
 </body>
-<script>
+<script> // this is for toggling the password masking
     function togglePassword(inputId, button) {
         const input = document.getElementById(inputId);
         const icon = button.querySelector("i");

@@ -3,8 +3,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
+    exit;
+}
+
+if (($_SESSION['role'] ?? '') == 'student') {
+    header('Location: student_dashboard.php');
     exit;
 }
 
