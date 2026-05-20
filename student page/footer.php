@@ -3,17 +3,17 @@
         <div class="row align-items-center gy-2">
             <div class="col-12 col-lg-4 text-center text-lg-start">
                 <small class="fw-bold" style="color: #1e3a8a;">
-                    example University
+                    Digital University
                 </small>
                 <small class="text-uppercase fw-semibold text-secondary ms-3" style="letter-spacing: 2px;">
-                    © 2026 example University
+                    © 2026 Digital University
                 </small>
             </div>
 
             <div class="col-12 col-lg-8">
                 <div class="d-flex justify-content-center justify-content-lg-end gap-4 flex-wrap">
-                    <a href="#" class="text-decoration-none text-secondary small text-uppercase" style="letter-spacing: 2px;">Privacy Policy</a>
-                    <a href="#" class="text-decoration-none text-secondary small text-uppercase" style="letter-spacing: 2px;">Terms of Service</a>
+                    <a href="privacy_policy.php" class="text-decoration-none text-secondary small text-uppercase" style="letter-spacing: 2px;">Privacy Policy</a>
+                    <a href="terms_of_service.php" class="text-decoration-none text-secondary small text-uppercase" style="letter-spacing: 2px;">Terms of Service</a>
                 </div>
             </div>
         </div>
@@ -22,11 +22,11 @@
 
 <footer class="bg-light-subtle py-4 d-sm-none text-center">
     <div class="container-fluid">
-        <div class="fw-bold mb-3" style="color: #1e3a8a;">example University</div>
+        <div class="fw-bold mb-3" style="color: #1e3a8a;">Digital University</div>
         <div class="d-flex justify-content-center gap-3 flex-wrap mb-3">
-            <a href="#" class="text-decoration-none text-secondary small">PRIVACY</a>
-            <a href="#" class="text-decoration-none text-secondary small">TERMS</a>
+            <a href="privacy_policy.php" class="text-decoration-none text-secondary small">PRIVACY</a>
+            <a href="terms_of_service.php" class="text-decoration-none text-secondary small">TERMS</a>
         </div>
-        <small class="text-secondary">© 2026 example University</small>
+        <small class="text-secondary">© 2026 Digital University</small>
     </div>
 </footer>
