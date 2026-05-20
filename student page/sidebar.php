@@ -11,15 +11,6 @@ $sidebarUserName = $_SESSION['full_name'] ?? 'Student User';
 $sidebarStudentNumber = 'Student';
 $sidebarInitials = 'S';
 
-/*
-|--------------------------------------------------------------------------
-| Database user lookup
-|--------------------------------------------------------------------------
-| This assumes config.php is one folder above this sidebar file:
-| student page/sidebar.php
-| config.php
-*/
-
 $configPath = __DIR__ . '/../config.php';
 
 if (file_exists($configPath) && isset($_SESSION['user_id'])) {
@@ -28,13 +19,6 @@ if (file_exists($configPath) && isset($_SESSION['user_id'])) {
     $userId = $_SESSION['user_id'];
 
     try {
-        /*
-        |--------------------------------------------------------------------------
-        | PDO version
-        |--------------------------------------------------------------------------
-        | This works if config.php creates a PDO connection named $conn, $pdo,
-        | or $connection.
-        */
 
         $databaseConnection = null;
 
@@ -71,13 +55,6 @@ if (file_exists($configPath) && isset($_SESSION['user_id'])) {
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | MySQLi version
-        |--------------------------------------------------------------------------
-        | This works if config.php creates a MySQLi connection named $conn.
-        */
-
         elseif (isset($conn) && $conn instanceof mysqli) {
             $statement = $conn->prepare("
                 SELECT 
@@ -110,12 +87,6 @@ if (file_exists($configPath) && isset($_SESSION['user_id'])) {
         */
     }
 }
-
-/*
-|--------------------------------------------------------------------------
-| Create initials
-|--------------------------------------------------------------------------
-*/
 
 $nameParts = preg_split('/\s+/', trim($sidebarUserName));
 
@@ -174,11 +145,6 @@ if (count($nameParts) >= 2) {
                 <i class="bi bi-house-fill me-3"></i>Dashboard
             </a>
 
-            <a href="#"
-               class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'profile' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
-                <i class="bi bi-person-fill me-3"></i>Profile
-            </a>
-
             <a href="student_enrollment.php"
                class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'enrollment' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-briefcase-fill me-3"></i>Enrollment
@@ -229,11 +195,6 @@ if (count($nameParts) >= 2) {
             <a href="student_dashboard.php"
                class="nav-link rounded-4 px-3 py-3 fw-semibold <?= $currentStudentPage === 'dashboard' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
                 <i class="bi bi-house-fill me-3"></i>Dashboard
-            </a>
-
-            <a href="#"
-               class="nav-link rounded-4 px-3 py-3 fw-medium <?= $currentStudentPage === 'profile' ? 'text-white currentlySelected' : 'text-secondary menuHover' ?>">
-                <i class="bi bi-person-fill me-3"></i>Profile
             </a>
 
             <a href="student_enrollment.php"
