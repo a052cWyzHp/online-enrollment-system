@@ -17,6 +17,7 @@ $currentAdminPage = 'applications';
 $basePath = '';
 
 require_once 'config.php';
+require_once 'utilities/UIFormatter.php'; // this is for format helper and colors based on enrollment status
 
 if (!isset($pdo) && isset($conn) && $conn instanceof PDO) {
     $pdo = $conn;
@@ -457,38 +458,6 @@ class ApplicationManager {
     }
 }
 
-function formatStatusLabel(string $status): string {
-    return ucwords(str_replace('_', ' ', $status));
-}
-
-function safeDate(?string $date): string {
-    return !empty($date) ? date('M d, Y', strtotime($date)) : 'Not submitted';
-}
-
-function safeDateTime(?string $date): string {
-    return !empty($date) ? date('M d, Y h:i A', strtotime($date)) : 'Not submitted';
-}
-
-function initialsFromName(string $name): string {
-    $parts = preg_split('/\s+/', trim($name));
-
-    if(count($parts) >= 2) {
-        return strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
-    }
-
-    return strtoupper(substr($name, 0, 1));
-}
-
-function statusBadgeClass(string $status): string {
-    return match($status) {
-        'fully_enrolled', 'enrolled' => 'bg-success-subtle text-success',
-        'payment_pending', 'payment_submitted', 'under_review', 'documents_submitted' => 'bg-warning-subtle text-warning',
-        'resubmission_required' => 'bg-info-subtle text-info',
-        'rejected' => 'bg-danger-subtle text-danger',
-        default => 'bg-secondary-subtle text-secondary'
-    };
-}
-
 function getApplicationActions(string $status): array {
     if(in_array($status, ['documents_submitted', 'under_review'])) {
         return [
@@ -686,7 +655,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                 <option value="">All Statuses</option>
                                 <?php foreach($statuses as $status): ?>
                                     <option value="<?= htmlspecialchars($status); ?>" <?= $statusFilter === $status ? 'selected' : ''; ?>>
-                                        <?= htmlspecialchars(formatStatusLabel($status)); ?>
+                                        <?= htmlspecialchars(UIFormatter::formatStatusLabel($status)); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -752,7 +721,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                                             justify-content-center
                                                             text-white fw-bold"
                                                      style="width:45px; height:45px; background:#0b1f5f;">
-                                                    <?= htmlspecialchars(initialsFromName($row['full_name'])); ?>
+                                                    <?= htmlspecialchars(UIFormatter::initialsFromName($row['full_name'])); ?>
                                                 </div>
                                                 <div>
                                                     <div class="fw-semibold">
@@ -777,15 +746,15 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
 
                                         <!-- STATUS -->
                                         <td>
-                                            <span class="badge rounded-pill px-3 py-2 <?= statusBadgeClass($row['application_status']); ?>">
-                                                <?= htmlspecialchars(formatStatusLabel($row['application_status'])); ?>
+                                            <span class="badge rounded-pill px-3 py-2 <?= UIFormatter::statusBadgeClass($row['application_status']); ?>">
+                                                <?= htmlspecialchars(UIFormatter::formatStatusLabel($row['application_status'])); ?>
                                             </span>
                                         </td>
 
                                         <!-- DATE -->
                                         <td>
                                             <span class="text-secondary small">
-                                                <?= htmlspecialchars(safeDate($row['submitted_at'])); ?>
+                                                <?= htmlspecialchars(UIFormatter::safeDate($row['submitted_at'])); ?>
                                             </span>
                                         </td>
 
@@ -842,11 +811,11 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                     </div>
 
                                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                                        <span class="badge rounded-pill px-3 py-2 <?= statusBadgeClass($row['application_status']); ?>">
-                                            <?= htmlspecialchars(formatStatusLabel($row['application_status'])); ?>
+                                        <span class="badge rounded-pill px-3 py-2 <?= UIFormatter::statusBadgeClass($row['application_status']); ?>">
+                                            <?= htmlspecialchars(UIFormatter::formatStatusLabel($row['application_status'])); ?>
                                         </span>
                                         <span class="small text-secondary">
-                                            Submitted: <?= htmlspecialchars(safeDate($row['submitted_at'])); ?>
+                                            Submitted: <?= htmlspecialchars(UIFormatter::safeDate($row['submitted_at'])); ?>
                                         </span>
                                     </div>
                                 </div>
@@ -902,7 +871,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                             Application #<?= htmlspecialchars($row['application_id']); ?>
                         </h5>
                         <p class="text-secondary mb-0">
-                            <?= htmlspecialchars($row['full_name']); ?> • <?= htmlspecialchars(formatStatusLabel($row['application_status'])); ?>
+                            <?= htmlspecialchars($row['full_name']); ?> • <?= htmlspecialchars(UIFormatter::formatStatusLabel($row['application_status'])); ?>
                         </p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -915,7 +884,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                 <h6 class="fw-bold text-uppercase mb-3">Personal Information</h6>
                                 <p><span class="fw-semibold">Full Name:</span> <?= htmlspecialchars($row['full_name']); ?></p>
                                 <p><span class="fw-semibold">Email:</span> <?= htmlspecialchars($row['email']); ?></p>
-                                <p><span class="fw-semibold">Birth Date:</span> <?= htmlspecialchars(safeDate($row['birth_date'])); ?></p>
+                                <p><span class="fw-semibold">Birth Date:</span> <?= htmlspecialchars(UIFormatter::safeDate($row['birth_date'])); ?></p>
                                 <p><span class="fw-semibold">Gender:</span> <?= htmlspecialchars($row['gender'] ?? 'Not provided'); ?></p>
                                 <p><span class="fw-semibold">Nationality:</span> <?= htmlspecialchars($row['nationality'] ?? 'Not provided'); ?></p>
                                 <p class="mb-0"><span class="fw-semibold">Contact Number:</span> <?= htmlspecialchars($row['phone'] ?? 'Not provided'); ?></p>
@@ -938,7 +907,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                 <p><span class="fw-semibold">Last School Attended:</span> <?= htmlspecialchars($row['previous_school'] ?? 'Not provided'); ?></p>
                                 <p><span class="fw-semibold">School Address:</span> <?= htmlspecialchars($row['previous_school_address'] ?? 'Not provided'); ?></p>
                                 <p><span class="fw-semibold">Year Graduated:</span> <?= htmlspecialchars($row['year_graduated'] ?? 'Not provided'); ?></p>
-                                <p><span class="fw-semibold">Entry Type:</span> <?= htmlspecialchars(formatStatusLabel($row['entry_type'] ?? 'Not provided')); ?></p>
+                                <p><span class="fw-semibold">Entry Type:</span> <?= htmlspecialchars(UIFormatter::formatStatusLabel($row['entry_type'] ?? 'Not provided')); ?></p>
                                 <p class="mb-0"><span class="fw-semibold">School Year:</span> <?= htmlspecialchars($row['school_year'] ?? 'Not provided'); ?></p>
                             </div>
                         </div>
@@ -973,7 +942,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                             <tr>
                                                 <td><?= htmlspecialchars($document['document_name']); ?></td>
                                                 <td><?= htmlspecialchars($document['file_name']); ?></td>
-                                                <td><?= htmlspecialchars(safeDateTime($document['uploaded_at'])); ?></td>
+                                                <td><?= htmlspecialchars(UIFormatter::safeDateTime($document['uploaded_at'])); ?></td>
                                                 <td class="text-end">
                                                     <a href="<?= htmlspecialchars($document['file_path']); ?>" target="_blank" class="btn btn-sm btn-light border">
                                                         <i class="bi bi-eye"></i>
@@ -1001,7 +970,7 @@ $applications = $manager->getAllApplications($search, $sortBy, $sortOrder, $prog
                                 <div>
                                     <div class="fw-semibold">Proof of Payment</div>
                                     <div class="small text-secondary">
-                                        Status: <?= htmlspecialchars(formatStatusLabel($payment['payment_status'])); ?> • Submitted: <?= htmlspecialchars(safeDateTime($payment['submitted_at'])); ?>
+                                        Status: <?= htmlspecialchars(UIFormatter::formatStatusLabel($payment['payment_status'])); ?> • Submitted: <?= htmlspecialchars(UIFormatter::safeDateTime($payment['submitted_at'])); ?>
                                     </div>
                                 </div>
                                 <a href="<?= htmlspecialchars($payment['proof_of_payment']); ?>" target="_blank" class="btn btn-sm btn-light border">

@@ -14,6 +14,7 @@ if (($_SESSION['role'] ?? '') == 'admin') {
 }
 
 require_once __DIR__ . '/config.php';
+require_once 'utilities/UIFormatter.php'; // this is for format helper and colors based on enrollment status
 
 $currentStudentPage = 'enrollment';
 $userId = (int) $_SESSION['user_id'];
@@ -184,18 +185,9 @@ $currentApplication = fetchLatestApplication($pdo, $studentId);
 $applicationStatus = $currentApplication['application_status'] ?? 'application_form_pending';
 $programs = fetchActivePrograms($pdo);
 
-$nameParts = preg_split('/\s+/', trim($student['full_name']));
-$initials = '';
-foreach ($nameParts as $part) {
-    $initials .= strtoupper(substr($part, 0, 1));
-    if (strlen($initials) >= 2) {
-        break;
-    }
-}
-
 $studentData = [
     'student_name' => $student['full_name'],
-    'student_initials' => $initials ?: 'S',
+    'student_initials' => UIFormatter::initialsFromName($student['full_name']),
     'class_year' => 'Student Portal'
 ];
 ?>

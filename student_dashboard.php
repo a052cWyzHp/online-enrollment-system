@@ -16,9 +16,9 @@ if (($_SESSION['role'] ?? '') == 'admin') {
 }
 
 require_once __DIR__ . '/config.php';
+require_once 'utilities/UIFormatter.php'; // this is for format helper and colors based on enrollment status
 
-function ensureStudentNumber(PDO $pdo, int $userId): string
-{
+function ensureStudentNumber(PDO $pdo, int $userId): string {
     try {
         $pdo->beginTransaction();
 
@@ -116,31 +116,8 @@ function ensureStudentNumber(PDO $pdo, int $userId): string
 $userId = (int) $_SESSION['user_id'];
 $studentNumber = ensureStudentNumber($pdo, $userId);
 
-// converts name to initials like Hello World -> H W
-function getInitials(string $name): string
-{
-    // removes spaces before and after the name then splits each word into an item in the $words array
-    $words = preg_split('/\s+/', trim($name));
-    $initials = '';
-
-    // for every item (or word) in the $words array...
-    foreach ($words as $word) {
-        if ($word !== '') { // if the item is not empty...
-            $initials .= strtoupper(substr($word, 0, 1)); // take the first letter of the string in this item then make the letter uppercase, then put it in $initials variable
-        }
-
-        // and only stop if the length of the string in $initials is 2
-        if (strlen($initials) >= 2) {
-            break;
-        }
-    }
-
-    return $initials !== '' ? $initials : 'S'; // output the initials if $initials is not empty, if it is however, output S as initial for student instead
-}
-
 // properly formats enrollment status of the user
-function formatStatusLabel(string $status): string
-{
+function formatStatusLabel(string $status): string {
     return match ($status) {
         'application_form_pending' => 'Application Form Pending',
         'documents_pending' => 'Documents Pending',
@@ -194,18 +171,6 @@ function getProgressPercent(string $status): int
         'fully_enrolled' => 100,
         'rejected' => 40,
         default => 0
-    };
-}
-
-// this is for the application status part of the page, it basically dictates the color of the enrollment status
-function getStatusBadgeClass(string $status): string
-{
-    return match ($status) {
-        'fully_enrolled', 'enrolled', 'approved' => 'text-success-emphasis bg-success-subtle',
-        'payment_pending', 'documents_pending', 'under_review', 'documents_submitted', 'payment_submitted', 'confirmation_pending' => 'text-primary-emphasis bg-primary-subtle',
-        'resubmission_required' => 'text-warning-emphasis bg-warning-subtle',
-        'rejected' => 'text-danger-emphasis bg-danger-subtle',
-        default => 'text-secondary-emphasis bg-secondary-subtle'
     };
 }
 
@@ -351,7 +316,7 @@ $submittedAt = !empty($currentApplication['submitted_at']) ? date('M d, Y', strt
 
 $studentData = [
     'student_name' => $studentName,
-    'student_initials' => getInitials($studentName),
+    'student_initials' => UIFormatter::initialsFromName($studentName),
     'class_year' => $schoolYear,
     'completion_percentage' => $progressPercent,
     'application_status' => formatStatusLabel($applicationStatus),
@@ -464,7 +429,7 @@ if (empty($notifications)) {
                                 <div class="text-uppercase fw-medium" style="letter-spacing: 2px; color: #374151;">
                                     Application Status:
                                 </div>
-                                <span class="badge rounded-pill px-3 py-2 <?= getStatusBadgeClass($applicationStatus); ?>">
+                                <span class="badge rounded-pill px-3 py-2 <?= UIFormatter::statusBadgeClass($applicationStatus); ?>">
                                     <?= htmlspecialchars($studentData['application_status']); ?>
                                 </span>
                             </div>
