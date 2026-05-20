@@ -1,0 +1,21 @@
+# even though we have file extension checks for our uploads, this is just another layer of protection to really prevent code execution in this folder and directory browsing
+
+# disable php inside this folder
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# turn any of the uploaded files with the following file extension into just plaintext to avoid code execution
+AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .phps .shtml .pl .py .cgi
+
+# prevent double extension vulnerability
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|shtml|pl|py|cgi)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# prevent directory browsing
+Options -Indexes
