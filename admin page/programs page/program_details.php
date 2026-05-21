@@ -239,16 +239,19 @@ $paginationSeparator = str_contains($paginationBase, '?') ? '&' : '?';
         <?php if ($totalPages > 1): ?>
             <nav class="mt-4">
                 <ul class="pagination justify-content-center flex-wrap">
+                    <!-- previous page -->
                     <li class="page-item <?= $page <= 1 ? 'disabled' : ''; ?>">
                         <a class="page-link" href="<?= $paginationBase . $paginationSeparator; ?>page=<?= $page - 1; ?>">Previous</a>
                     </li>
 
+                    <!-- numbers page -->
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                         <li class="page-item <?= $i === $page ? 'active' : ''; ?>">
                             <a class="page-link" href="<?= $paginationBase . $paginationSeparator; ?>page=<?= $i; ?>"><?= $i; ?></a>
                         </li>
                     <?php endfor; ?>
 
+                    <!-- next page -->
                     <li class="page-item <?= $page >= $totalPages ? 'disabled' : ''; ?>">
                         <a class="page-link" href="<?= $paginationBase . $paginationSeparator; ?>page=<?= $page + 1; ?>">Next</a>
                     </li>
