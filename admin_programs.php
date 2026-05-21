@@ -22,7 +22,6 @@ if (!isset($pdo) && isset($conn) && $conn instanceof PDO) {
     $pdo = $conn;
 }
 
-// 1. Fully OOP Compliant Program Manager
 class ProgramManager {
     private PDO $pdo;
     private int $adminUserId;
@@ -36,8 +35,8 @@ class ProgramManager {
         return trim($value);
     }
 
-    // Encapsulated Logging Method
     private function logAction(string $actionType, ?int $targetId, string $description): void {
+        // main logging function
         $statement = $this->pdo->prepare("
             INSERT INTO admin_logs (user_id, action_type, target_table, target_id, description, ip_address) 
             VALUES (:user_id, :action_type, 'programs', :target_id, :description, :ip_address)
@@ -52,18 +51,21 @@ class ProgramManager {
     }
 
     public function getProgramById(int $programId): ?array {
+        // simply searches record from programs table by program id
         $stmt = $this->pdo->prepare("SELECT * FROM programs WHERE program_id = :id LIMIT 1");
         $stmt->execute([':id' => $programId]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function countApplications(int $programId): int {
+        // simply counts how many are applying into the program
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM enrollment_applications WHERE program_id = :id");
         $stmt->execute([':id' => $programId]);
         return (int) $stmt->fetchColumn();
     }
 
     public function countEnrolled(int $programId): int {
+        // counts how many are enrolled into the program
         $stmt = $this->pdo->prepare("
             SELECT COUNT(*) FROM enrollment_applications 
             WHERE program_id = :id AND application_status IN ('enrolled', 'fully_enrolled')
@@ -72,22 +74,22 @@ class ProgramManager {
         return (int) $stmt->fetchColumn();
     }
 
-    // Single unified method for transactions
     public function processAction(string $action, array $postData): string {
-        $programName = $this->cleanInput($postData['program_name'] ?? '');
-        $programCode = strtoupper($this->cleanInput($postData['program_code'] ?? ''));
+        // main function for creation and management of programs
+        // $postData is just the whole $_POST array taken from the creation/management/deletion program forms
+        $programName = $this->cleanInput($postData['program_name'] ?? ''); // e.g. Bachelor of Science in Information Tech
+        $programCode = strtoupper($this->cleanInput($postData['program_code'] ?? '')); // e.g. BSIT
         $description = $this->cleanInput($postData['description'] ?? '');
         $slotsAvailable = (int) ($postData['slots_available'] ?? 0);
-        $isActive = isset($postData['is_active']) ? 1 : 0;
+        $isActive = isset($postData['is_active']) ? 1 : 0; // 1 is true, 0 false
         $programId = (int) ($postData['program_id'] ?? 0);
 
-        // Begin Transaction: If logging fails, the program changes roll back automatically
         $this->pdo->beginTransaction();
         try {
             if ($action === 'create_program') {
                 if ($programName === '' || $programCode === '' || $slotsAvailable < 0) {
                     throw new Exception('Please complete the program name, code, and valid slot count.');
-                }
+                } // throw this error if incomplete input
                 $stmt = $this->pdo->prepare("
                     INSERT INTO programs (program_code, program_name, description, slots_available, is_active) 
                     VALUES (:code, :name, :desc, :slots, :active)
@@ -99,23 +101,22 @@ class ProgramManager {
                 ]);
                 
                 $newId = (int) $this->pdo->lastInsertId();
-                $this->logAction('create_program', $newId, "Created program $programCode - $programName");
+                $this->logAction('create_program', $newId, "Created program $programCode - $programName"); // log the action of making a new program
                 $this->pdo->commit();
                 return 'created';
             }
             elseif ($action === 'update_program') {
                 if ($programId <= 0 || $programName === '' || $programCode === '' || $slotsAvailable < 0) {
                     throw new Exception('Please complete the program details properly.');
-                }
+                } // throw this error if incomplete input
 
-                // 1. Fetch the old program data BEFORE updating
                 $oldProgram = $this->getProgramById($programId);
                 if (!$oldProgram) {
                     throw new Exception('Program not found.');
-                }
+                } // get the program data BEFORE updating
 
-                // 2. Track specific changes in an array
-                $changes = [];
+
+                $changes = []; // this will track the changes
                 
                 if ($oldProgram['program_name'] !== $programName) {
                     $changes[] = "name from '{$oldProgram['program_name']}' to '{$programName}'";
@@ -131,7 +132,6 @@ class ProgramManager {
                     $changes[] = "status changed to {$statusStr}";
                 }
 
-                // 3. Only run the update query if something actually changed
                 if (!empty($changes)) {
                     $stmt = $this->pdo->prepare("
                         UPDATE programs SET program_code = :code, program_name = :name, 
@@ -144,11 +144,11 @@ class ProgramManager {
                         ':slots' => $slotsAvailable, ':active' => $isActive, ':id' => $programId
                     ]);
                     
-                    // 4. Join the array into a readable sentence for the log
                     $changeLog = "Updated {$programCode}: " . implode(', ', $changes);
+                    // combines "updated" keyword and changes, e.g. "Updated BSIT: status changed from enabled to disabled"
                     
                     $this->logAction('update_program', $programId, $changeLog);
-                }
+                } // only log if there are actual changes
                 
                 $this->pdo->commit();
                 return 'updated';
@@ -158,18 +158,19 @@ class ProgramManager {
                 
                 $appCount = $this->countApplications($programId);
                 if ($appCount > 0) throw new Exception('Program has existing applications. Please deactivate it instead of deleting.');
+                // we can't really delete programs as it will cause problems with student data, if need to delete a program just disable instead
 
                 $program = $this->getProgramById($programId);
                 $stmt = $this->pdo->prepare("DELETE FROM programs WHERE program_id = :id");
                 $stmt->execute([':id' => $programId]);
                 
-                $this->logAction('delete_program', $programId, "Deleted program {$program['program_code']} - {$program['program_name']}");
+                $this->logAction('delete_program', $programId, "Deleted program {$program['program_code']} - {$program['program_name']}"); // log the action of deleting a program
                 $this->pdo->commit();
                 return 'deleted';
             }
             $this->pdo->commit();
         } catch (Exception $e) {
-            // Roll back the database entirely if any step fails
+            // cancel the SQL queries entirely if any step fails
             $this->pdo->rollBack();
             throw $e;
         }
@@ -180,11 +181,9 @@ class ProgramManager {
 $message = '';
 $messageType = 'success';
 
-// Instantiate the class
-$programManager = new ProgramManager($pdo, (int)$_SESSION['user_id']);
+$programManager = new ProgramManager($pdo, (int)$_SESSION['user_id']); // programmanager class instance
 
-// 2. Backward Compatibility 
-// (We keep these here so program_list.php and program_details.php don't crash if they still rely on the old functions)
+// these are to be used by the subpages
 function getProgramById(PDO $pdo, int $id) { global $programManager; return $programManager->getProgramById($id); }
 function countProgramApplications(PDO $pdo, int $id) { global $programManager; return $programManager->countApplications($id); }
 function countEnrolledStudents(PDO $pdo, int $id) { global $programManager; return $programManager->countEnrolled($id); }
@@ -196,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result) {
             $redirectUrl = 'admin_programs.php?message=' . $result;
             if ($result === 'updated') {
-                $redirectUrl = 'admin_programs.php?program_id=' . (int)$_POST['program_id'] . '&message=updated';
+                $redirectUrl = 'admin_programs.php?program_id=' . (int)$_POST['program_id'] . '&message=updated'; // this is purely for the sweetalert2 modal
             }
             header('Location: ' . $redirectUrl);
             exit;
@@ -208,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if (isset($_GET['message'])) {
+    // purely for sweetalert2 modal
     $messageType = 'success';
     $message = match ($_GET['message']) {
         'created' => 'Program was created successfully.',
@@ -231,6 +231,7 @@ $selectedProgram = $selectedProgramId > 0 ? $programManager->getProgramById($sel
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    // just recently found this nice modal library
 </head>
 <body class="bg-light-subtle">
 
