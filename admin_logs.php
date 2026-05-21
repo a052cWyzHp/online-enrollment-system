@@ -30,6 +30,7 @@ class AdminLog {
         $this->conn = $pdo;
     }
     public function getActionTypes(): array {
+        // this is for the action type filter dropdown
         $query = "
             SELECT DISTINCT action_type
             FROM admin_logs
@@ -42,9 +43,14 @@ class AdminLog {
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
     public function getLogs(string $search, string $actionType, int $limit, int $offset): array {
-        $where = [];
-        $params = [];
-        if ($search !== '') {
+        //this grabs the actual record from the admin logs table and it is based on the inputs from the filter section
+        // $search is the string from the search bar itself
+        // $actionType is taken from the action type dropdown
+        // $limit is how many records to grab from the table for pagination
+        // $offset decides how many records to skip for pagination
+        $where = []; // placeholder for the where query
+        $params = []; // this will be used to inject into $where
+        if ($search !== '') { // if there is something typed in the search bar, use these where queries
             $where[] = "
                 (
                     u.full_name LIKE :search
@@ -53,16 +59,20 @@ class AdminLog {
                     OR al.target_table LIKE :search
                 )
             ";
-            $params[':search'] = '%' . $search . '%';
+            $params[':search'] = '%' . $search . '%'; // this adds wildcard before and after the string for searching
         }
-        if ($actionType !== '') {
+        if ($actionType !== '') { // if there is something in the dropdown filter, add this part in the where query
             $where[] = "al.action_type = :action_type";
             $params[':action_type'] = $actionType;
         }
-        $whereSql = '';
-        if (!empty($where)) {
+        $whereSql = ''; // basically the total of where queries
+        if (!empty($where)) { // if where is not empty, combine all of them together into $whereSql
             $whereSql = 'WHERE ' . implode(' AND ', $where);
         }
+        // so why did we decide to go for the key-value route?
+        // it is simply to write the code easier instead of having to write a different placeholder name for every search filter
+        // when we need to add more filters in the future, it won't be hard to write the functionality
+
         $query = "
             SELECT 
                 al.log_id,
@@ -80,17 +90,18 @@ class AdminLog {
             $whereSql
             ORDER BY al.created_at DESC
             LIMIT :limit OFFSET :offset
-        ";
+        "; // search all records with the corresponding filters
         $stmt = $this->conn->prepare($query);
         foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
+            $stmt->bindValue($key, $value); // key is basically the placeholder like ":search:" and value is the parameter itself like $search or $actionType
         }
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT); // bind $limit to the placeholder as an integer, not string
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     public function countLogs(string $search, string $actionType): int {
+        // just counts how many results from the filter
         $where = [];
         $params = [];
         if ($search !== '') {
@@ -124,61 +135,53 @@ class AdminLog {
     }
 }
 function getLogStyle(string $actionType): array {
+    // this is for easy formatting of the action part of the table
     $action = strtolower($actionType);
-    if (str_contains($action, 'approve') || str_contains($action, 'verified') || str_contains($action, 'enrolled')) {
+    
+    // green for creations
+    if (str_contains($action, 'create')) {
         return [
-            'badge' => 'text-success-emphasis',
-            'background' => '#dcfce7',
-            'icon' => 'bi-check-circle-fill',
-            'icon_bg' => '#dcfce7',
+            'badge' => 'text-success-emphasis', 
+            'background' => '#dcfce7', 
+            'icon' => 'bi-plus-circle-fill', 
+            'icon_bg' => '#dcfce7', 
             'icon_color' => '#16a34a'
         ];
     }
-    if (str_contains($action, 'reject') || str_contains($action, 'delete')) {
+    
+    // red for deletions
+    if (str_contains($action, 'delete')) {
         return [
-            'badge' => 'text-danger-emphasis',
-            'background' => '#fee2e2',
-            'icon' => 'bi-x-circle-fill',
-            'icon_bg' => '#fee2e2',
+            'badge' => 'text-danger-emphasis', 
+            'background' => '#fee2e2', 
+            'icon' => 'bi-trash-fill', 
+            'icon_bg' => '#fee2e2', 
             'icon_color' => '#dc2626'
         ];
     }
-    if (str_contains($action, 'resubmit') || str_contains($action, 'reupload') || str_contains($action, 'pending')) {
+    
+    // orange for updates
+    if (str_contains($action, 'update')) {
         return [
-            'badge' => 'text-warning-emphasis',
-            'background' => '#fef3c7',
-            'icon' => 'bi-exclamation-triangle-fill',
-            'icon_bg' => '#fef3c7',
+            'badge' => 'text-warning-emphasis', 
+            'background' => '#fef3c7', 
+            'icon' => 'bi-pencil-square', 
+            'icon_bg' => '#fef3c7', 
             'icon_color' => '#d97706'
         ];
     }
-    if (str_contains($action, 'payment')) {
-        return [
-            'badge' => 'text-info-emphasis',
-            'background' => '#cffafe',
-            'icon' => 'bi-credit-card-fill',
-            'icon_bg' => '#cffafe',
-            'icon_color' => '#0891b2'
-        ];
-    }
-    if (str_contains($action, 'login') || str_contains($action, 'logout')) {
-        return [
-            'badge' => 'text-secondary-emphasis',
-            'background' => '#e5e7eb',
-            'icon' => 'bi-box-arrow-in-right',
-            'icon_bg' => '#e5e7eb',
-            'icon_color' => '#64748b'
-        ];
-    }
+    
+    // default color
     return [
-        'badge' => 'text-primary-emphasis',
-        'background' => '#dbeafe',
-        'icon' => 'bi-clock-history',
-        'icon_bg' => '#dbeafe',
+        'badge' => 'text-primary-emphasis', 
+        'background' => '#dbeafe', 
+        'icon' => 'bi-clock-history', 
+        'icon_bg' => '#dbeafe', 
         'icon_color' => '#2563eb'
     ];
 }
 function getInitials(string $name): string {
+    // gets the initials of the admin name
     $nameParts = preg_split('/\s+/', trim($name));
     if (count($nameParts) >= 2) {
         return strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
@@ -189,6 +192,7 @@ function getInitials(string $name): string {
     return 'A';
 }
 function formatLogDate(?string $date): string {
+    // makes the date easier to read
     if (empty($date)) {
         return 'No date';
     }
