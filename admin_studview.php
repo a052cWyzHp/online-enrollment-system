@@ -48,6 +48,7 @@ class StudentView {
     }
 
     public function getStudentStatuses(): array {
+        // for filter dropdown
         return [
             'enrolled',
             'fully_enrolled'

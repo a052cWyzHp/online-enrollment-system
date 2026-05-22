@@ -496,7 +496,7 @@ if (empty($notifications)) {
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-12 col-md-4">
+                <!-- <div class="col-12 col-md-4">
                     <div class="card border-0 rounded-4 shadow-sm h-100">
                         <div class="card-body p-4">
                             <div class="rounded-4 d-flex align-items-center justify-content-center mb-3" style="width: 52px; height: 52px; background-color: #eff6ff;">
@@ -507,7 +507,7 @@ if (empty($notifications)) {
                             <a href="#" class="text-decoration-none fw-semibold" style="color: #0b1f5f;">Manage Profile <i class="bi bi-chevron-right small"></i></a>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- <div class="col-12 col-md-4">
                     <div class="card border-0 rounded-4 shadow-sm h-100">
