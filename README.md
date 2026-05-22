@@ -9,3 +9,11 @@ how to test:
 - register account to get started
 - in phpmyadmin, find users table then change user's role to admin
 - make another account but for student
+
+Group Members:
+- Aldeza, Roma
+- De Vega, Denver
+- Lupaz, Teddy Boy
+- Pamilar, Aviegail Bulusan
+- Puzon, Joziah Azriel Nietes
+- Sanchez, Godwin
