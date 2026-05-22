@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <form method="post">
                                 <div class="mb-3">
-                                    <label for="email" class="form-label fw-semibold small text-uppercase">username or email</label>
+                                    <label for="email" class="form-label fw-semibold small text-uppercase">email</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0">@</span>
                                         <input type="email" name="email" class="form-control border-start-0 bg-light" id="email" placeholder="e.g. j.smith@university.edu" value="<?= htmlspecialchars($_POST['email'] ?? ''); ?>" required>
